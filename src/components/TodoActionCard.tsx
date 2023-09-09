@@ -1,8 +1,6 @@
-"use client"
+"use client";
 
-import { DatePickerWithPresets } from "@/components/ui/date";
 import { Input } from "@/components/ui/input";
-import * as React from "react";
 import { addDays, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
@@ -21,11 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { ToDoContext } from "@/provider/context";
+import { useContext } from "react";
 
-const page = () => {
-    const [date, setDate] = React.useState<Date>()
-    return (
-    <div className="flex flex-col items-center justify-center h-screen space-y-5">
+export type Action = "assign" | "edit" | "read";
+
+export function ToDoActionCard({ props }: { props: { action: Action } }) {
+  const { action } = props;
+  const { data, setData } = useContext(ToDoContext);
+  const { title, date, desc } = data;
+  return (
+    <div>
       <p className="font-bold text-3xl tracking-wide pb-5">Assign a ToDo</p>
       <div className="w-full flex flex-col items-center space-y-3">
         <p className="text-base font-semibold text-center">Title</p>
@@ -33,6 +40,8 @@ const page = () => {
           type="text"
           placeholder="Developer meeting"
           className="text-center max-w-lg"
+          value={title}
+          onChange={(e) => setData(...data, { title: e.target.value })}
         ></Input>
       </div>
       <div>
@@ -52,7 +61,7 @@ const page = () => {
           <PopoverContent className="flex w-auto flex-col space-y-2 p-2">
             <Select
               onValueChange={(value) =>
-                setDate(addDays(new Date(), parseInt(value)))
+                setData(...data, { date: addDays(new Date(), parseInt(value)) })
               }
             >
               <SelectTrigger>
@@ -66,7 +75,7 @@ const page = () => {
               </SelectContent>
             </Select>
             <div className="rounded-md border">
-              <Calendar mode="single" selected={date} onSelect={setDate} />
+              <Calendar mode="single" selected={date} onSelect={setData} />
             </div>
           </PopoverContent>
         </Popover>
@@ -74,6 +83,4 @@ const page = () => {
       <div>Description</div>
     </div>
   );
-};
-
-export default page;
+}
