@@ -41,24 +41,24 @@ export function ToDoActionCard({ props }: { props: { action: Action } }) {
   const handleTodo = () => {
     setData({...data,date:calendarDate});
     console.log(title,date,desc);
-    // axios
-    //   .post("/api/todo", { title, date, desc })
-    //   .then((response) => {
-    //     toast({
-    //       title: "Assigned To Do!",
-    //       description: "To do assigned successfully.",
-    //     });
-    //     console.log(response);
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //     toast({
-    //       variant: "destructive",
-    //       title: "Error",
-    //       description: "Oops! something went wrong.",
-    //       action: <ToastAction altText="Try again">Try again</ToastAction>,
-    //     });
-    //   });
+    axios
+      .post("/api/todo", { title, date, desc })
+      .then((response) => {
+        toast({
+          title: "Assigned To Do!",
+          description: "To do assigned successfully.",
+        });
+        console.log(response);
+      })
+      .catch((error) => {
+        console.log(error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Oops! something went wrong.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      });
   };
 
   return (

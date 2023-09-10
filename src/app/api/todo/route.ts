@@ -17,3 +17,12 @@ export async function POST(request:Request){
         console.log(error);
     }
 }
+
+export async function GET(){
+    try{
+        //fetch todos from the db
+        return NextResponse.json({});
+    } catch(error){
+        console.log(error);
+    }
+}
