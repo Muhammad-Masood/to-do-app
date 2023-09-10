@@ -1,5 +1,5 @@
 import { ToDoActionCard } from "@/components/TodoActionCard";
-import { createContext, useState } from "react";
+import React, { createContext, useState } from "react";
 
 type ToDoData = {
     title:string;
@@ -7,15 +7,14 @@ type ToDoData = {
     desc:string
 }
 
-export const ToDoContext = createContext<any>(null);
+export const ToDoContext = createContext<any>({});
 
 export function ToDoContextProvider({children}:{children:React.ReactNode}){
     const [data,setData] = useState<ToDoData>({title:"",date:new Date(),desc:""});
-
     return(
         <div>
             <ToDoContext.Provider value={{data,setData}}>
-            <ToDoActionCard props={{action:"read"}}/>
+            {children}
             </ToDoContext.Provider>
         </div>
     )

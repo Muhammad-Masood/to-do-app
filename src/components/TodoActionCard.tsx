@@ -23,7 +23,9 @@ import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { ToDoContext } from "@/provider/context";
-import { useContext } from "react";
+import { useContext, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export type Action = "assign" | "edit" | "read";
 
@@ -31,37 +33,69 @@ export function ToDoActionCard({ props }: { props: { action: Action } }) {
   const { action } = props;
   const { data, setData } = useContext(ToDoContext);
   const { title, date, desc } = data;
+  const { toast } = useToast();
+  const [calendarDate, setCalendarDate] = useState<Date | undefined>(
+    new Date()
+  );
+
+  const handleTodo = () => {
+    setData({...data,date:calendarDate});
+    console.log(title,date,desc);
+    // axios
+    //   .post("/api/todo", { title, date, desc })
+    //   .then((response) => {
+    //     toast({
+    //       title: "Assigned To Do!",
+    //       description: "To do assigned successfully.",
+    //     });
+    //     console.log(response);
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //     toast({
+    //       variant: "destructive",
+    //       title: "Error",
+    //       description: "Oops! something went wrong.",
+    //       action: <ToastAction altText="Try again">Try again</ToastAction>,
+    //     });
+    //   });
+  };
+
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center pt-20 space-y-4">
       <p className="font-bold text-3xl tracking-wide pb-5">Assign a ToDo</p>
-      <div className="w-full flex flex-col items-center space-y-3">
-        <p className="text-base font-semibold text-center">Title</p>
+        <Label className="text-center">Title</Label>
         <Input
           type="text"
           placeholder="Developer meeting"
           className="text-center max-w-lg"
           value={title}
-          onChange={(e) => setData(...data, { title: e.target.value })}
+          onChange={(e) => {
+            setData({ ...data, title: e.target.value });
+          }}
         ></Input>
-      </div>
-      <div>
+      <div className="pt-2 pb-2">
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
               className={cn(
                 "w-[280px] justify-start text-left font-normal",
-                !date && "text-muted-foreground"
+                !calendarDate && "text-muted-foreground"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {calendarDate ? (
+                format(calendarDate, "PPP")
+              ) : (
+                <span>Pick a date</span>
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="flex w-auto flex-col space-y-2 p-2">
             <Select
               onValueChange={(value) =>
-                setData(...data, { date: addDays(new Date(), parseInt(value)) })
+                setCalendarDate(addDays(new Date(), parseInt(value)))
               }
             >
               <SelectTrigger>
@@ -75,12 +109,20 @@ export function ToDoActionCard({ props }: { props: { action: Action } }) {
               </SelectContent>
             </Select>
             <div className="rounded-md border">
-              <Calendar mode="single" selected={date} onSelect={setData} />
+              <Calendar
+                mode="single"
+                selected={calendarDate}
+                onSelect={setCalendarDate}
+              />
             </div>
           </PopoverContent>
         </Popover>
       </div>
-      <div>Description</div>
+        <Label htmlFor="message" className="text-center">Description</Label>
+        <Textarea className="w-64" placeholder="Define your to-do here." id="message" onChange={(e) => setData({...data,desc:e.target.value})} />
+      <Button onClick={handleTodo}>
+        {action === "assign" ? "Assign" : "Update"}
+      </Button>
     </div>
   );
 }
