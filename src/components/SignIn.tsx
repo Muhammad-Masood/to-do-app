@@ -48,7 +48,7 @@ export function SignInForm() {
       .post("/api/auth/signin", values)
       .then((response) => {
         console.log(response);
-        router.push(`/todo/${response.data.displayName}`);
+        router.push(`/todo/${response.data.displayName}?uid=${response.data.uid}`);
       })
       .catch((error) => {
         toast({

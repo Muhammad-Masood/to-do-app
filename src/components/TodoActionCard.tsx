@@ -23,14 +23,14 @@ import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { ToDoContext } from "@/provider/context";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export type Action = "assign" | "edit" | "read";
 
-export function ToDoActionCard({ props }: { props: { action: Action } }) {
-  const { action } = props;
+export function ToDoActionCard({ props }: { props: { action: Action, uid:string|null}}) {
+  const { action,uid } = props;
   const { data, setData } = useContext(ToDoContext);
   const { title, date, desc } = data;
   const { toast } = useToast();
@@ -38,11 +38,13 @@ export function ToDoActionCard({ props }: { props: { action: Action } }) {
     new Date()
   );
 
+  useEffect(() => {
+    setData({ ...data, date: calendarDate });
+  },[calendarDate])
+
   const handleTodo = () => {
-    setData({...data,date:calendarDate});
-    console.log(title,date,desc);
     axios
-      .post("/api/todo", { title, date, desc })
+      .post("/api/todo", { uid,title, date, desc })
       .then((response) => {
         toast({
           title: "Assigned To Do!",
@@ -95,7 +97,8 @@ export function ToDoActionCard({ props }: { props: { action: Action } }) {
           <PopoverContent className="flex w-auto flex-col space-y-2 p-2">
             <Select
               onValueChange={(value) =>
-                setCalendarDate(addDays(new Date(), parseInt(value)))
+                // setCalendarDate(addDays(new Date(), parseInt(value)))
+                setData({...data,date:addDays(new Date(), parseInt(value))})
               }
             >
               <SelectTrigger>

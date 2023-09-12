@@ -1,5 +1,5 @@
-import { signInWithEmailAndPassword,updateProfile,getAuth } from "firebase/auth";
-import { app, auth } from "../../../../../firebase_app";
+import { signInWithEmailAndPassword,updateProfile,getAuth, onAuthStateChanged } from "firebase/auth";
+import {  auth } from "../../../../../firebase_app";
 import { NextResponse } from "next/server";
 
 type SignInRequestBody = {
@@ -9,8 +9,9 @@ type SignInRequestBody = {
 
 export async function POST(request:Request){
     try{
-        // const defAuth = getAuth();
+    // const defAuth = getAuth();
         const body = await request.json() as SignInRequestBody;
+        console.log(body.email,body.password);
         const user = await signInWithEmailAndPassword(auth,body.email,body.password);
         return NextResponse.json(user.user,{status:200});
     } catch(error){

@@ -1,16 +1,11 @@
+import { ToDoData } from "@/provider/context";
 
-type ToDoSticker = {
-    title:string
-    date:string;
-    desc:string;
-}
-
-const Sticker = (sticker:ToDoSticker) => {
-  console.log(sticker);
+const Sticker = (stickerProps:ToDoData) => {
+  console.log(stickerProps);
   // get the bg-color of sticker
     return (
     <div className="">
-        <p>New Sticker</p>
+        <p>{stickerProps.title},{String(stickerProps.date)},{stickerProps.desc}</p>
     </div>
   )
 }

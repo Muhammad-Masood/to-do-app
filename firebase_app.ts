@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore/lite";
+import { getFirestore } from "firebase/firestore";
 import {getAuth} from "firebase/auth";
-import admin from "firebase-admin";
 // import { initializeApp } from 'firebase-admin/app';
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -16,7 +15,6 @@ const firebaseConfig = {
   };
 
   export const app = initializeApp(firebaseConfig);
-  // export const app = initializeApp();
-  // export const db = getFirestore(app);
+  export const db = getFirestore(app);
   export const auth = getAuth(app);
   

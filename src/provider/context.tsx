@@ -1,7 +1,7 @@
 import { ToDoActionCard } from "@/components/TodoActionCard";
 import React, { createContext, useState } from "react";
 
-type ToDoData = {
+export type ToDoData = {
     title:string;
     date:Date;
     desc:string
