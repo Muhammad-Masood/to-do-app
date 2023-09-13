@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth, db } from "../../../../firebase_app";
 import {
   addDoc,
@@ -6,9 +6,12 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import { ToDoData } from "@/provider/context";
+import toDate from "date-fns/toDate";
 
 type ToDoRequestBody = {
   uid: string;
@@ -17,21 +20,22 @@ type ToDoRequestBody = {
   desc: string;
 };
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as ToDoRequestBody;
-    console.log(body.title, body.date, body.desc, body.uid);
+    const {title,date,desc} = body;
+    const uid = request.nextUrl.searchParams.get('uid');
     // user uid will be the doc id.
-    if (body.uid) {
-      const userDocRef = doc(db, "users", body.uid);
-      const userDocSnapshot = await getDoc(userDocRef);
-      const existingTodos: ToDoRequestBody[] =
-        userDocSnapshot.data()?.todos || [];
-      existingTodos.push(body);
-      const newToDo = await setDoc(userDocRef, {
-        todo: existingTodos,
-      });
-      return NextResponse.json(newToDo, { status: 200 });
+    if (uid) {
+      const userDocRef = doc(db, "users", uid);
+      const userTodoCollection = collection(userDocRef,"todos");  // collection of todos belonging to user
+      const convertDate = new Date(date).getMonth()+1+"/"+new Date(date).getDate()+"/"+new Date(date).getFullYear();
+      const todoDocRef = await addDoc(userTodoCollection,{
+        title:title,
+        date:convertDate,
+        desc:desc
+      })
+      return NextResponse.json(todoDocRef.id, { status: 200 });
     } else {
       throw new Error("User not signed in.");
     }
@@ -40,15 +44,19 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     //fetch todos from the db
-    const uid: string | null = await request.json();
+    const uid: string | null = request.nextUrl.searchParams.get('uid');
     if (uid) {
-      const userDocSnapshot = await getDoc(doc(db, "users", uid));
-      const signedUserTodos: ToDoRequestBody[] =
-        userDocSnapshot.data()?.todos || [];
-      return NextResponse.json(signedUserTodos, { status: 201 });
+      const todoCollectionRef = collection(doc(db,"users",uid),"todos");
+      const userTodoDocsSnapshot = await getDocs(todoCollectionRef);
+      const signedUsertodos:ToDoData[]  = []
+      userTodoDocsSnapshot.docs.forEach((todoDoc) => {
+        const todoData:ToDoData = todoDoc.data() as ToDoData;
+        signedUsertodos.push(todoData);
+      })
+      return NextResponse.json(signedUsertodos, { status: 201 });
     } else {
       return NextResponse.json(
         { message: "User not signed in" },
@@ -60,34 +68,35 @@ export async function GET(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function PATCH(request:NextRequest) {
   try {
-    const uid: string | null = await request.json();
-    if (uid) {
-      const deletedTodo = await deleteDoc(doc(db, "users", uid));
-      return NextResponse.json(deletedTodo, { status: 201 });
-    } else {
-      return NextResponse.json(
-        { message: "User not signed in" },
-        { status: 201 }
-      );
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-export async function PATCH(request:Request) {
-  try {
-    const body = await request.json();
-    const {modifiedTodo,uid} = body;
-    if(uid){
-      const updatedDoc = await updateDoc(doc(db,"users",uid),{
-        todos:modifiedTodo
-      });
-      return NextResponse.json(updatedDoc, { status: 201 });
+    const body = await request.json() as ToDoData;
+    const uid = request.nextUrl.searchParams.get('uid');
+    const todoId = request.nextUrl.searchParams.get('todoId');
+    if(uid && todoId){
+      const modifyTodoDocRef =  doc(db,"users",uid,"todos",todoId);
+      await updateDoc(modifyTodoDocRef,body);
+      return NextResponse.json({message:`Modified the todo ${todoId}`}, { status: 201 });
     } else{
       return NextResponse.json(
+        { message: "User not signed in or Todo id not found" },
+        { status: 201 }
+      );
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const uid = request.nextUrl.searchParams.get('uid');
+    const todoId = request.nextUrl.searchParams.get('todoId');
+    if (uid && todoId) {
+      await deleteDoc(doc(db, "users", "todos",todoId));
+      return NextResponse.json({message:`Deleted todo ${todoId}`}, { status: 201 });
+    } else {
+      return NextResponse.json(
         { message: "User not signed in" },
         { status: 201 }
       );
@@ -96,3 +105,4 @@ export async function PATCH(request:Request) {
     console.log(error);
   }
 }
+

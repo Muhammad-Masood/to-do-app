@@ -43,8 +43,9 @@ export function ToDoActionCard({ props }: { props: { action: Action, uid:string|
   },[calendarDate])
 
   const handleTodo = () => {
+    console.log("Before post",date);
     axios
-      .post("/api/todo", { uid,title, date, desc })
+      .post(`/api/todo?uid=${uid}`, data)
       .then((response) => {
         toast({
           title: "Assigned To Do!",
