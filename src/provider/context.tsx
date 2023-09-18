@@ -5,13 +5,14 @@ export type ToDoData = {
     id:string;
     title:string;
     date:string;
-    desc:string
+    desc:string;
+    bgColor:string;
 }
 
 export const ToDoContext = createContext<any>({});
 
 export function ToDoContextProvider({children}:{children:React.ReactNode}){
-    const [data,setData] = useState<ToDoData>({id:"", title:"",date:new Date().toJSON(),desc:""});
+    const [data,setData] = useState<ToDoData>({id:"", title:"",date:new Date().toJSON(),desc:"",bgColor:""});   
     return(
         <div>
             <ToDoContext.Provider value={{data,setData}}>

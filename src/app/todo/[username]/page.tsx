@@ -33,7 +33,7 @@ const page = ({ params }: { params: { username: string } }) => {
         Welcome {params.username}!
       </p>
       {todoData.map((todo,i) => (
-        <Sticker {...todo} key={i} />
+        <Sticker stickerProps={{todo,username:params.username,uid}} key={i} />
       ))}
       <Link href={`/todo/${params.username}/assign?uid=${uid}`}>
         <div className="flex bg-teal-100 p-3 px-5 w-min rounded-full hover:bg-teal-200 duration-300">
