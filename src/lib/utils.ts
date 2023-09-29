@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
+import { usePathname, useSearchParams } from "next/navigation"
 import { twMerge } from "tailwind-merge"
  
 export function cn(...inputs: ClassValue[]) {
@@ -13,3 +14,11 @@ export const colors = [
   "bg-violet-200",
   "bg-lime-200"
 ]
+
+export const getUsername = () => {
+  return usePathname().split('/')[2];
+}
+
+export const getUid = () => {
+  return useSearchParams().get('uid');
+}

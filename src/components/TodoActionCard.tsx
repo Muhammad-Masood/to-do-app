@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { addDays, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, getUid, getUsername } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -27,80 +27,112 @@ import { useContext, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ColorPick } from "./ui/color-pick";
+import { useRouter } from "next/navigation";
+import { Refresh } from "./Refresh";
 
-export type Action = "assign" | "edit" | "delete" |"read";
+export type Action = "assign" | "edit" | "delete" | "read";
 
-export function ToDoActionCard({ props }: { props: { action: Action, uid:string|null}}) {
-  const { action,uid } = props;
+interface TodoActionProps {
+  action: Action;
+  uid: string | null;
+  todoId: string | null;
+}
+
+export const ToDoActionCard: React.FC<TodoActionProps> = ({
+  action,
+  uid,
+  todoId,
+}) => {
   const { data, setData } = useContext(ToDoContext);
-  const { title, date, desc } = data;
   const { toast } = useToast();
   const [calendarDate, setCalendarDate] = useState<Date | undefined>(
     new Date()
   );
+  const router = useRouter();
+  const username = getUsername();
+  const { title, date, desc, bgColor } = data;
 
   useEffect(() => {
-    if(action==="edit"){
-      axios.get(`/api/todo?uid=${uid}`).then((response) => console.log(response.data) ).catch(error => console.log(error))
+    if (action === "edit") {
+      axios
+        .get(`/api/todo?uid=${uid}&id=${todoId}`)
+        .then((response) => {
+          const res = response.data;
+          setData(res);
+        })
+        .catch((error) => console.log(error));
+    } else {
+      setData({ ...data, date: calendarDate });
     }
-    setData({ ...data, date: calendarDate });
-  },[calendarDate])
+  }, [calendarDate]);
 
   const handleTodo = (action: Action) => {
     const url = `/api/todo?uid=${uid}`;
-    const body = {data};
-    
-    const toastErrorMessage = toast({
-      variant: "destructive",
-      title: "Error",
-      description: "Oops! something went wrong.",
-      action: <ToastAction altText="Try again">Try again</ToastAction>,
-    });
+    const body = data;
 
-    if(action === "assign" || "edit"){
+    if (action === "edit") {
+      axios.patch(`/api/todo/${todoId}?uid=${uid}`, data);
+    }
+
+    if (action === "assign" || "edit") {
       const axiosMethod = action === "assign" ? axios.post : axios.patch;
-      axiosMethod(url,body).then((response) => {
-        toast({
-          title: `${action} To Do!`,
-          description: `To do ${action}ed successfully.`,
+      axiosMethod(url, body)
+        .then((response) => {
+          toast({
+            title: `${action} To Do!`,
+            description: `To do ${action}ed successfully.`,
+          });
+          router.push(`/todo/${username}?uid=${uid}`);
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Oops! something went wrong.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
         });
-        console.log(response);
-      }).catch((error) => {
-        console.log(error);
-        toastErrorMessage;
-      })
     } else if (action === "delete") {
       const axiosMethod = axios.delete;
-      axiosMethod(url,body).then((response) => {
-        toast({
-          title: "Deleted To Do!",
-          description: "To do assigned successfully.",
+      axiosMethod(url, body)
+        .then((response) => {
+          toast({
+            title: "Deleted To Do!",
+            description: "To do assigned successfully.",
+          });
+          console.log(response);
+        })
+        .catch((error) => {
+          console.log(error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Oops! something went wrong.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
         });
-        console.log(response);
-      }).catch((error) => {
-        console.log(error);
-        toastErrorMessage;
-      })
     }
-    
   };
 
   return (
     <div className="flex flex-col items-center justify-center pt-20 space-y-4">
       <div className="flex justify-between w-[500px]">
-      <p className="font-bold text-3xl tracking-wide pb-5 capitalize">{action} a ToDo</p>
-      <ColorPick/>
+        <p className="font-bold text-3xl tracking-wide pb-5 capitalize">
+          {action} a ToDo
+        </p>
+        <ColorPick colorValue={bgColor} />
       </div>
-        <Label className="text-center">Title</Label>
-        <Input
-          type="text"
-          placeholder="Developer meeting"
-          className="text-center max-w-lg"
-          value={title}
-          onChange={(e) => {
-            setData({ ...data, title: e.target.value });
-          }}
-        ></Input>
+      <Label className="text-center">Title</Label>
+      <Input
+        type="text"
+        placeholder="Developer meeting"
+        className="text-center max-w-lg"
+        value={title}
+        onChange={(e) => {
+          setData({ ...data, title: e.target.value });
+        }}
+      ></Input>
       <div className="pt-2 pb-2">
         <Popover>
           <PopoverTrigger asChild>
@@ -123,7 +155,7 @@ export function ToDoActionCard({ props }: { props: { action: Action, uid:string|
             <Select
               onValueChange={(value) =>
                 // setCalendarDate(addDays(new Date(), parseInt(value)))
-                setData({...data,date:addDays(new Date(), parseInt(value))})
+                setData({ ...data, date: addDays(new Date(), parseInt(value)) })
               }
             >
               <SelectTrigger>
@@ -146,11 +178,19 @@ export function ToDoActionCard({ props }: { props: { action: Action, uid:string|
           </PopoverContent>
         </Popover>
       </div>
-        <Label htmlFor="message" className="text-center">Description</Label>
-        <Textarea className="w-64" placeholder="Define your to-do here." id="message" onChange={(e) => setData({...data,desc:e.target.value})} />
+      <Label htmlFor="message" className="text-center">
+        Description
+      </Label>
+      <Textarea
+        className="w-64"
+        placeholder="Define your to-do here."
+        id="message"
+        onChange={(e) => setData({ ...data, desc: e.target.value })}
+        value={desc}
+      />
       <Button onClick={() => handleTodo(action)}>
         {action === "assign" ? "Assign" : "Update"}
       </Button>
     </div>
   );
-}
+};

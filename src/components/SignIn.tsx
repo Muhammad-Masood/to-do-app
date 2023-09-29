@@ -19,6 +19,8 @@ import { redirect } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "./ui/toast";
 import { useRouter } from "next/navigation";
+import { auth } from "../../firebase_app";
+import { onAuthStateChanged } from "firebase/auth";
 
 const SignInFormSchema = z.object({
   email: z
@@ -48,6 +50,13 @@ export function SignInForm() {
       .post("/api/auth/signin", values)
       .then((response) => {
         console.log(response);
+        onAuthStateChanged(auth,(user) => {
+          if(user){
+            console.log(user);
+          } else {
+            console.log("user not found :/");
+          }
+        });
         router.push(`/todo/${response.data.displayName}?uid=${response.data.uid}`);
       })
       .catch((error) => {
@@ -86,7 +95,7 @@ export function SignInForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="****" {...field} />
+                  <Input placeholder="****" {...field} type="password" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

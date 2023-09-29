@@ -13,8 +13,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ToDoContextProvider>
+          <div className='mx-14'>
           <Navbar/>
-        {children}
+          {children}
+          </div>
         </ToDoContextProvider>
         <Toaster/>
         </body>
